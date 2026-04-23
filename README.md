@@ -34,3 +34,17 @@ A simple URL shortener service.
 ## Package Manager
 
 - pnpm
+
+## Project Documentation
+
+### Api List
+| Module | Method | Endpoint            | Description                                              | Auth Required |
+|--------|--------|---------------------|----------------------------------------------------------|---------------|
+| User   | POST   | /api/users/register | Register a new user                                      | No            |
+| User   | POST   | /api/users/login    | Authenticate a user and return a JWT                     | No            |
+| URL    | GET    | /api/urls/:shortcut | Retrieve the original URL for a given shortcut           | No            |
+| URL    | GET    | /:shortcut          | Redirect to the original URL for a given shortcut        | No            |
+| URL    | GET    | /api/urls           | Retrieve all URLs created by the authenticated user      | Yes           |
+| URL    | POST   | /api/urls/shorten   | Create a new shortened URL for user                      | Yes           |
+| URL    | DELETE | /api/urls/:shortcut | Delete a shortened URL created by the authenticated user | Yes           |
+

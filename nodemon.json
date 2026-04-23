@@ -1,0 +1,10 @@
+{
+  "watch": ["src"],
+  "ext": "js,mjs,json",
+  "ignore": ["node_modules"],
+  "exec": "node src/index.js",
+  "delay": "3000",
+  "events": {
+    "restart": "clear"
+  }
+}

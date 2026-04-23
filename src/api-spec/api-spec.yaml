@@ -1,0 +1,307 @@
+openapi: 3.0.0
+info:
+  title: URL Shortcut API
+  version: 1.0.0
+servers:
+  - url: /url-shortcut/api/v1
+paths:
+  /user/register:
+    post:
+      tags:
+        - User
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: User registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterSuccessResponse'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationFailedResponse'
+        '409':
+          description: Email already associated with another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConflictResponse'
+  /user/login:
+    post:
+      tags:
+        - User
+      summary: Login user and return JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '202':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationFailedResponse'
+        '401':
+          description: Password does not match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUnauthorizedResponse'
+        '404':
+          description: Email not associated with any user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginNotFoundResponse'
+  /info/helthcheck:
+    get:
+      tags:
+        - Info
+      summary: Health check endpoint (authenticated)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Request processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthcheckSuccessResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/AuthMissingResponse'
+                  - $ref: '#/components/schemas/AuthFormatErrorResponse'
+                  - $ref: '#/components/schemas/AuthInvalidTokenResponse'
+        '404':
+          description: Authenticated user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserNotFoundResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required:
+        - firstName
+        - email
+        - address
+        - password
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          maxLength: 32
+          pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,32}$
+      additionalProperties: false
+    LoginUserRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 32
+          pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,32}$
+      additionalProperties: false
+    RegisterSuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+        - createdUserId
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        message:
+          type: string
+          enum:
+            - User Registration request successful.
+        createdUserId:
+          type: string
+      additionalProperties: false
+    EmailConflictResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - email is already associated with another user, try with different email.
+      additionalProperties: false
+    LoginSuccessResponse:
+      type: object
+      required:
+        - success
+        - jwt
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        jwt:
+          type: string
+      additionalProperties: false
+    LoginNotFoundResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - email is not associated with any user, register email.
+      additionalProperties: false
+    LoginUnauthorizedResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - associated user email and password does not match.
+      additionalProperties: false
+    HealthcheckSuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: string
+          enum:
+            - 'true'
+        message:
+          type: string
+          enum:
+            - Request Processed Successfully!
+      additionalProperties: false
+    ValidationFailedResponse:
+      type: object
+      required:
+        - success
+        - message
+        - errors
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        message:
+          type: string
+          enum:
+            - Validation Failed
+        errors:
+          type: object
+          additionalProperties: true
+      additionalProperties: false
+    AuthMissingResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - User not authenticated, please login
+      additionalProperties: false
+    AuthFormatErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - Invalid authorization format
+      additionalProperties: false
+    AuthInvalidTokenResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - Invalid or expired token
+      additionalProperties: false
+    AuthUserNotFoundResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - User not found, please register!
+      additionalProperties: false

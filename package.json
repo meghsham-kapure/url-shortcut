@@ -1,0 +1,37 @@
+{
+  "name": "url-shortcut",
+  "version": "1.0.0",
+  "description": "URL Shorter Service Backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon",
+    "db:push": "npx drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Meghsham Kapure",
+  "github": "https://github.com/meghsham-kapure",
+  "linkedin": "https://www.linkedin.com/in/meghsham-kapure/",
+  "license": "ISC",
+  "packageManager": "pnpm@10.33.0",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "nodemon": "^3.1.14",
+    "pg": "^8.20.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6"
+  }
+}
