@@ -146,3 +146,4 @@ dist
 #IGNORED/prompt/swagger.txt
 #IGNORED/note
 #IGNORED/prompt/swagger.txt
+.vscode/launch.json

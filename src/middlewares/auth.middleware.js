@@ -1,78 +1,79 @@
+import getCookiesOptions from '../utils/getCookiesOptions.util.js';
 import HTTP_STATUS from '../utils/httpStatus.util.js';
-import { findUserById } from '../services/user.service.js';
-import { validateJwtToken } from '../utils/jwtHelper.util.js';
-import { jwtTokenValidationSchema } from '../validations/user.validation.js';
+import { generateAccessToken, validateToken } from '../utils/jwtHelper.util.js';
+import { findSessionBySessionId } from './../services/session.service.js';
+import { findUserById } from './../services/user.service.js';
 import getTimestamp from './../utils/getTimestamp.util.js';
 
+// Auth middleware
 export default async function authenticate(req, res, next) {
-  console.info(`${getTimestamp()} Request on path: ${req.originalUrl} getting authenticated`);
+  console.info(`${getTimestamp()} Authenticating request on ${req.originalUrl}`);
 
-  const authHeader = req.headers.authorization;
+  const accessTokenFromCookie = req.cookies.accessToken;
+  const accessTokenFromAuthHeader = req.header('Authorization')?.replace('Bearer ', '');
 
-  if (!authHeader) {
+  if (accessTokenFromCookie && accessTokenFromAuthHeader) {
+    return res
+      .status(HTTP_STATUS.BAD_REQUEST)
+      .json({ success: false, error: 'Multiple authentication sources provided' });
+  }
+
+  const accessToken = accessTokenFromCookie || accessTokenFromAuthHeader;
+
+  if (!accessToken) {
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({
       success: false,
-      error: 'Authorization header not provided',
+      error: 'Authentication failed. Access token is missing',
     });
   }
 
-  const authSplit = authHeader.trim().split(/\s+/);
+  let accessTokenPayload = validateToken(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
-  if (authSplit.length !== 2) {
-    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-      success: false,
-      error: 'Invalid authorization header format',
-    });
-  }
-
-  const [scheme, token] = authSplit;
-
-  if (scheme !== 'Bearer' || !token) {
-    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-      success: false,
-      error: 'Invalid authorization header format',
-    });
-  }
-
-  try {
-    const tokenPayloadValue = validateJwtToken(token);
-
-    if (!tokenPayloadValue) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        success: false,
-        error: 'Authorization header token provided is invalid/expired',
-      });
-    }
-
-    const encodedPayload = jwtTokenValidationSchema.safeEncode(tokenPayloadValue);
-
-    if (encodedPayload.success === false) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        success: false,
-        error: 'Authorization header token provided is not in expected format',
-      });
-    }
-
-    const user = await findUserById(encodedPayload.data.id);
-
-    if (!user) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json({
-        success: false,
-        error: 'User in authorization header token is not active or does not exist',
-      });
-    }
-
-    req.user = user;
-
+  if (accessTokenPayload.status === 'VerifiedToken') {
+    req.user = await findUserById(accessTokenPayload.data.userId);
     return next();
-  } catch (error) {
-    console.error(
-      `${getTimestamp()} Error during authentication: ${JSON.stringify(error.message)}`
+  }
+
+  if (accessTokenPayload.status === 'InvalidToken') {
+    return res
+      .status(HTTP_STATUS.UNAUTHORIZED)
+      .json({ success: false, error: 'Authentication failed : Token Error' });
+  }
+
+  if (accessTokenPayload.status === 'TokenExpiredError') {
+    const userId = accessTokenPayload.data.userId;
+    const sessionId = accessTokenPayload.data.sessionId;
+    const session = await findSessionBySessionId(sessionId);
+
+    if (!session) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        success: false,
+        error: 'Unauthorized User : Session not found, log-in required!',
+      });
+    }
+
+    const refreshTokenPayload = validateToken(
+      session.refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
     );
 
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      error: 'Internal server error',
-    });
+    if (refreshTokenPayload.status === 'VerifiedToken') {
+      const accessToken = await generateAccessToken({ userId: userId, sessionId: sessionId });
+      res.cookie('accessToken', accessToken, getCookiesOptions());
+      req.user = await findUserById(refreshTokenPayload.data.userId);
+      next();
+    } else if (
+      refreshTokenPayload.status === 'TokenExpiredError' ||
+      refreshTokenPayload.status === 'InvalidToken'
+    ) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        success: false,
+        error: 'Authentication failed. Invalid session',
+      });
+    } else {
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json({ success: false, error: 'Authentication failed. Invalid session' });
+    }
   }
 }

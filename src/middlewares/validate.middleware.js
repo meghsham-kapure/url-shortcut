@@ -9,7 +9,7 @@ export const validate = (schema) => (req, res, next) => {
     });
 
     req.validated = parsed;
-    
+
     next();
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({

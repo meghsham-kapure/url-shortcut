@@ -37,14 +37,28 @@ A simple URL shortener service.
 
 ## Project Documentation
 
-### Api List
-| Module | Method | Endpoint            | Description                                              | Auth Required |
-|--------|--------|---------------------|----------------------------------------------------------|---------------|
-| User   | POST   | /api/users/register | Register a new user                                      | No            |
-| User   | POST   | /api/users/login    | Authenticate a user and return a JWT                     | No            |
-| URL    | GET    | /api/urls/:shortcut | Retrieve the original URL for a given shortcut           | No            |
-| URL    | GET    | /:shortcut          | Redirect to the original URL for a given shortcut        | No            |
-| URL    | GET    | /api/urls           | Retrieve all URLs created by the authenticated user      | Yes           |
-| URL    | POST   | /api/urls/shorten   | Create a new shortened URL for user                      | Yes           |
-| URL    | DELETE | /api/urls/:shortcut | Delete a shortened URL created by the authenticated user | Yes           |
+## Api List
+
+| Module | Method | Endpoint                    | Description                                        | Auth Required | Status  |
+| ------ | ------ | --------------------------- | -------------------------------------------------- | ------------- | ------- |
+| User   | POST   | /api/users/register         | Register a new user                                | No            | Ready   |
+| User   | POST   | /api/users/login            | Authenticate a user and return a JWT               | No            | Ready   |
+| User   | POST   | /api/users/logout           | Logout user and invalidate session                 | Yes           | Planned |
+| User   | POST   | /api/auth/refresh           | Refresh access token                               | Yes           | Planned |
+| User   | GET    | /api/users/:userId          | Retrieve a user profile by ID                      | Yes           | Planned |
+| User   | PATCH  | /api/users/:userId          | Update user profile details                        | Yes           | Planned |
+| User   | PATCH  | /api/users/:userId/password | Update user password                               | Yes           | Planned |
+| User   | PATCH  | /api/users/:userId/         | Forgot user password                               | Yes           | Planned |
+| User   | DELETE | /api/users/:userId          | Delete user and cascade delete associated URLs     | Yes           | Planned |
+| User   | GET    | /api/users/availability     | Check username availability                        | No            | Planned |
+| User   | PATCH  | /api/users/:userId/plan     | Upgrade or change user subscription plan           | Yes           | Planned |
+| User   | PATCH  | /api/users/:userId/role     | Update user role or permissions                    | Yes           | Planned |
+| User   | GET    | /api/users/:userId/activity | Retrieve user activity or audit logs               | Yes           | Planned |
+| URL    | GET    | /api/urls/:shortcut         | Retrieve original URL for a shortcut               | No            | Planned |
+| URL    | GET    | /:shortcut                  | Redirect to original URL                           | No            | Planned |
+| URL    | GET    | /api/urls                   | Retrieve URLs owned by authenticated user          | Yes           | Planned |
+| URL    | GET    | /api/users/:userId/urls     | Retrieve public URLs belonging to another user     | Yes           | Planned |
+| URL    | GET    | /api/users/me/urls          | Retrieve URLs belonging to current user            | Yes           | Planned |
+| URL    | POST   | /api/urls/shorten           | Create a new shortened URL                         | Yes           | Planned |
+| URL    | DELETE | /api/urls/:shortcut         | Delete a shortened URL owned by authenticated user | Yes           | Planned |
 

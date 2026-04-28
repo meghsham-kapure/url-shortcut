@@ -1,8 +1,8 @@
 import 'dotenv/config';
 
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import getTimestamp from '../utils/getTimestamp.util.js';
-import { sql } from 'drizzle-orm';
 
 let dbConnection;
 try {

@@ -1,31 +1,42 @@
-import { createUser, findUserByEmailId, isPasswordMatching } from '../services/user.service.js';
-import { createSaltedPassword } from './../utils/saltedPassword.util.js';
-import HTTP_STATUS from '../utils/httpStatus.util.js';
-import { validateUserAndCreateJwtToken } from '../utils/jwtHelper.util.js';
+import {
+  createUser,
+  findUserByEmailId,
+  findUserByPhone,
+  findUserByUsername,
+  isPasswordMatching,
+} from '../services/user.service.js';
 import getTimestamp from '../utils/getTimestamp.util.js';
+import HTTP_STATUS from '../utils/httpStatus.util.js';
+import {
+  createUserSession,
+  deleteSessionById,
+  findSessionByUserId,
+} from './../services/session.service.js';
+import getCookiesOptions from './../utils/getCookiesOptions.util.js';
+import { generateAccessToken, validateToken } from './../utils/jwtHelper.util.js';
+import { createSaltedPassword } from './../utils/saltedPassword.util.js';
 
 export async function userRegistration(req, res) {
   console.info(
     `${getTimestamp()} userRegistration request received with body: ${JSON.stringify(req.validated.body)}`
   );
 
-  const { firstName, lastName, email, address, password } = req.validated.body;
+  const { username, firstName, lastName, birthDate, email, phone, password } = req.validated.body;
   const { hashedPassword, salt } = createSaltedPassword(password);
 
   const user = {
+    username,
     firstName,
     lastName,
+    birthDate,
     email,
-    address,
+    phone,
     password: hashedPassword,
     salt,
   };
 
   try {
     const createdUser = await createUser(user);
-    console.info(
-      `${getTimestamp()} User record created successfully with ID: ${createdUser.id} for email: ${email}`
-    );
 
     return res.status(HTTP_STATUS.CREATED).json({
       success: true,
@@ -40,7 +51,7 @@ export async function userRegistration(req, res) {
 
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
-        error: 'email is already associated with another user, try with different email',
+        error: error.cause.detail,
       });
     }
 
@@ -60,9 +71,13 @@ export async function userLogin(req, res) {
     `${getTimestamp()} userLogin request received with body: ${JSON.stringify(req.validated.body)}`
   );
 
-  const { email, password } = req.validated.body;
+  const { email, username, phone, password } = req.validated.body;
 
-  const [existingUser] = await findUserByEmailId(email);
+  let existingUser;
+
+  if (username) [existingUser] = await findUserByUsername(username);
+  else if (email) [existingUser] = await findUserByEmailId(email);
+  else if (phone) [existingUser] = await findUserByPhone(phone);
 
   if (!existingUser) {
     return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -85,12 +100,35 @@ export async function userLogin(req, res) {
     });
   }
 
-  const jwtToken = await validateUserAndCreateJwtToken({
-    id: existingUser.id,
-  });
+  let session = await findSessionByUserId(existingUser.id);
+
+  if (!session) {
+    session = await createUserSession(existingUser.id);
+  }
+
+  const verifiedRefreshToken = validateToken(
+    session.refreshToken,
+    process.env.REFRESH_TOKEN_SECRET
+  );
+
+  if (verifiedRefreshToken.status === 'InvalidToken') {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+      success: false,
+      error: verifiedRefreshToken.status,
+    });
+  }
+
+  if (verifiedRefreshToken.status === 'TokenExpiredError') {
+    const deletedSession = await deleteSessionById(session.id);
+    session = await createUserSession(existingUser.id);
+  }
+
+  const accessToken = await generateAccessToken({ userId: existingUser.id, sessionId: session.id });
+
+  res.cookie('accessToken', accessToken, getCookiesOptions());
 
   return res.status(HTTP_STATUS.OK).json({
     success: true,
-    jwt: jwtToken,
+    accessToken: accessToken,
   });
 }
