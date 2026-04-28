@@ -11,10 +11,22 @@ import {
   createUserSession,
   deleteSessionById,
   findSessionByUserId,
+
 } from './../services/session.service.js';
 import getCookiesOptions from './../utils/getCookiesOptions.util.js';
 import { generateAccessToken, validateToken } from './../utils/jwtHelper.util.js';
 import { createSaltedPassword } from './../utils/saltedPassword.util.js';
+
+export async function userLogout(req, res) {
+  console.info(`${getTimestamp()} userLogout request received`);
+
+  await deleteSessionById(req.session.id);
+
+  res.status(HTTP_STATUS.OK).clearCookie('accessToken').json({
+    success: true,
+    message: 'User logged out!',
+  });
+}
 
 export async function userRegistration(req, res) {
   console.info(

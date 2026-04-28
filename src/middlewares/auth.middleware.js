@@ -28,9 +28,11 @@ export default async function authenticate(req, res, next) {
   }
 
   let accessTokenPayload = validateToken(accessToken, process.env.ACCESS_TOKEN_SECRET);
+  console.log(accessTokenPayload);
 
   if (accessTokenPayload.status === 'VerifiedToken') {
     req.user = await findUserById(accessTokenPayload.data.userId);
+    req.session = await findSessionBySessionId(accessTokenPayload.data.sessionId);
     return next();
   }
 
@@ -60,8 +62,10 @@ export default async function authenticate(req, res, next) {
     if (refreshTokenPayload.status === 'VerifiedToken') {
       const accessToken = await generateAccessToken({ userId: userId, sessionId: sessionId });
       res.cookie('accessToken', accessToken, getCookiesOptions());
-      req.user = await findUserById(refreshTokenPayload.data.userId);
-      next();
+
+      req.user = await findUserById(accessTokenPayload.data.userId);
+      req.session = await findSessionBySessionId(accessTokenPayload.data.sessionId);
+      return next();
     } else if (
       refreshTokenPayload.status === 'TokenExpiredError' ||
       refreshTokenPayload.status === 'InvalidToken'
