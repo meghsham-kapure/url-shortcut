@@ -1,3 +1,5 @@
+import getEnvironment from './getEnvironment.util.js';
+
 const cookieOptionsProd = {
   secure: true,
   httpOnly: true,
@@ -11,8 +13,7 @@ const cookieOptionsDev = {
 };
 
 export default function getCookiesOptions() {
-  const env = process.env.ENVIRONMENT?.toLowerCase() || 'development';
-
+  const env = getEnvironment();
   if (env.toLocaleLowerCase().startsWith('dev')) return cookieOptionsDev;
   else if (env.toLocaleLowerCase().startsWith('prod')) return cookieOptionsProd;
   else return {};

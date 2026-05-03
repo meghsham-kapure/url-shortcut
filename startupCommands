@@ -1,7 +1,0 @@
-cd /home/maverick/Documents/url-shortcut
-
-clear && pnpm dev
-
-clear && npx drizzle - kit studio--host 0.0.0.0 --port 4983
-
-docker exec -it url-shortcut-postgres-db-service-1 psql -U maverickPgAdmin -d url_shortcut_pg_db

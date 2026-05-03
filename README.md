@@ -41,9 +41,9 @@ A simple URL shortener service.
 
 | Module | Method | Endpoint                    | Description                                        | Auth Required | Status  |
 | ------ | ------ | --------------------------- | -------------------------------------------------- | ------------- | ------- |
-| User   | POST   | /api/users/register         | Register a new user                                | No            | Ready   |
-| User   | POST   | /api/users/login            | Authenticate a user and return a JWT               | No            | Ready   |
-| User   | POST   | /api/users/logout           | Logout user and invalidate session                 | Yes           | Planned |
+| User   | POST   | /api/users/register         | Register a new user                                | No            | Done    |
+| User   | POST   | /api/users/login            | Authenticate a user and return a JWT               | No            | Done    |
+| User   | POST   | /api/users/logout           | Logout user and invalidate session                 | Yes           | Done    |
 | User   | POST   | /api/auth/refresh           | Refresh access token                               | Yes           | Planned |
 | User   | GET    | /api/users/:userId          | Retrieve a user profile by ID                      | Yes           | Planned |
 | User   | PATCH  | /api/users/:userId          | Update user profile details                        | Yes           | Planned |

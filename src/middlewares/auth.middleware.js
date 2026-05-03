@@ -28,7 +28,6 @@ export default async function authenticate(req, res, next) {
   }
 
   let accessTokenPayload = validateToken(accessToken, process.env.ACCESS_TOKEN_SECRET);
-  console.log(accessTokenPayload);
 
   if (accessTokenPayload.status === 'VerifiedToken') {
     req.user = await findUserById(accessTokenPayload.data.userId);

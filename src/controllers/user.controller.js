@@ -50,17 +50,21 @@ export async function userRegistration(req, res) {
   try {
     const createdUser = await createUser(user);
 
-    return res.status(HTTP_STATUS.CREATED).json({
-      success: true,
-      message: 'User Registration request successful',
-      createdUserId: createdUser.id,
-    });
+    return res.status(HTTP_STATUS.CREATED).json(
+      new ApiResponse({
+        statusCode: HTTP_STATUS.OK,
+        message: 'User Registration successful.',
+        data: { createdUserId: createdUser.id },
+      })
+    );
+
   } catch (error) {
     if (error.cause.code === '23505') {
       console.error(
         `${getTimestamp()} ERROR : Duplicate user register request email ${email}. Error: Table[${error.cause.table}]:${error.cause.detail}`
       );
 
+      // ERROR RESPONSE
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
         error: error.cause.detail,
@@ -71,6 +75,7 @@ export async function userRegistration(req, res) {
       `${getTimestamp()} ERROR : Failed to create user record for email ${email}. Error: ${JSON.stringify(error)}`
     );
 
+    // ERROR RESPONSE
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: 'Server error occurred while processing the user registration request',
@@ -92,6 +97,7 @@ export async function userLogin(req, res) {
   else if (phone) [existingUser] = await findUserByPhone(phone);
 
   if (!existingUser) {
+    // ERROR RESPONSE
     return res.status(HTTP_STATUS.NOT_FOUND).json({
       success: false,
       error: 'Invalid credentials',
@@ -106,6 +112,7 @@ export async function userLogin(req, res) {
   );
 
   if (!passwordMatched) {
+    // ERROR RESPONSE
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({
       success: false,
       error: 'Invalid credentials',
@@ -124,6 +131,7 @@ export async function userLogin(req, res) {
   );
 
   if (verifiedRefreshToken.status === 'InvalidToken') {
+    // ERROR RESPONSE
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({
       success: false,
       error: verifiedRefreshToken.status,
@@ -139,8 +147,11 @@ export async function userLogin(req, res) {
 
   res.cookie('accessToken', accessToken, getCookiesOptions());
 
-  return res.status(HTTP_STATUS.OK).json({
-    success: true,
-    accessToken: accessToken,
-  });
+  return res.status(HTTP_STATUS.OK).json(
+    new ApiResponse({
+      statusCode: HTTP_STATUS.OK,
+      message: 'User login successful.',
+      data: accessToken,
+    })
+  );
 }

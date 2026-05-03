@@ -9,11 +9,11 @@ apiRouter.use('/info', infoRouter);
 import userRouter from './user.routes.js';
 apiRouter.use('/user', userRouter);
 
-import urlRouter from './url.routes.js';
-apiRouter.use('/url', urlRouter);
-
 import demoRouter from './demo.routes.js';
 apiRouter.use('/demo', demoRouter);
+
+import urlRouter from './url.routes.js';
+apiRouter.use('/url', urlRouter);
 
 export default apiRouter;
 
